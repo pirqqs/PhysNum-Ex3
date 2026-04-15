@@ -19,57 +19,33 @@ constexpr double PI = 3.14159265358979323846;
 class Exercice4
 {
 private:
-    size_t N_;
-    vector<double> masses_;
-    vector<double> rayons_;
-    vector<int> trainee_active_;
-    double temps_;
-    double temps_fin_;
-    double dt_;
-    double dt_min_;
-    double dt_max_;
-    double precision_;
-    double intervalle_sortie_;
-    bool pas_adaptatif_;
-    size_t indice_terre_;
-    size_t indice_atmosphere_;
-    size_t indice_sonde_;
-    double rho0_;
-    double lambda_;
-    double Cx_;
-    double section_;
-    double perigee_cible_;
-    Etat etat_;
+    size_t N_{3};
+    vector<double> masses_{5.972e24, 7.349e22, 8500.0};
+    vector<double> rayons_{6.371e6, 1.7374e6, 2.51};
+    vector<int> trainee_active_{0, 0, 1};
+    double temps_{0.0};
+    double temps_fin_{1036800.0};
+    double dt_{20.0};
+    double dt_min_{1.0e-3};
+    double dt_max_{300.0};
+    double precision_{1.0e-8};
+    double intervalle_sortie_{60.0};
+    bool pas_adaptatif_{true};
+    size_t indice_terre_{0};
+    size_t indice_atmosphere_{0};
+    size_t indice_sonde_{2};
+    double rho0_{1.2};
+    double lambda_{7238.2};
+    double Cx_{0.3};
+    double section_{0.25 * PI * pow(5.02, 2)};
+    double perigee_cible_{10000.0};
+    Etat etat_ = Etat(0.0, 4 * N_);
     ofstream fichier_sortie_;
-    double prochain_temps_sortie_;
-    double distance_min_terre_;
+    double prochain_temps_sortie_{temps_};
+    double distance_min_terre_{1.0e300};
 
 public:
-    Exercice4()
-        : N_(3)
-        , masses_({5.972e24, 7.349e22, 8500.0})
-        , rayons_({6.371e6, 1.7374e6, 2.51})
-        , trainee_active_({0, 0, 1})
-        , temps_(0.0)
-        , temps_fin_(1036800.0)
-        , dt_(20.0)
-        , dt_min_(1.0e-3)
-        , dt_max_(300.0)
-        , precision_(1.0e-8)
-        , intervalle_sortie_(60.0)
-        , pas_adaptatif_(true)
-        , indice_terre_(0)
-        , indice_atmosphere_(0)
-        , indice_sonde_(2)
-        , rho0_(1.2)
-        , lambda_(7238.2)
-        , Cx_(0.3)
-        , section_(0.25 * PI * pow(5.02, 2))
-        , perigee_cible_(10000.0)
-        , etat_(4 * N_)
-        , prochain_temps_sortie_(temps_)
-        , distance_min_terre_(1.0e300)
-    {
+    Exercice4() {
         const vector<double> x_initial = {0.0, 3.844e8, 3.14159e8};
         const vector<double> y_initial = {0.0, 0.0, 0.0};
         const vector<double> vx_initial = {0.0, 0.0, 0.0};
@@ -99,8 +75,8 @@ public:
         fichier_sortie_ << " E Px Py r_probe_earth perigee\n";
 
         {
-            double quantite_x = 0.0;
-            double quantite_y = 0.0;
+            double quantite_x{0.0};
+            double quantite_y{0.0};
             quantiteMouvementTotale(quantite_x, quantite_y);
 
             fichier_sortie_ << temps_;
@@ -127,8 +103,8 @@ public:
             distance_min_terre_ = min(distance_min_terre_, distanceSondeTerre(etat_));
 
             if (collisionDetectee()) {
-                double quantite_x = 0.0;
-                double quantite_y = 0.0;
+                double quantite_x{0.0};
+                double quantite_y{0.0};
                 quantiteMouvementTotale(quantite_x, quantite_y);
 
                 fichier_sortie_ << temps_;
@@ -145,8 +121,8 @@ public:
             }
 
             if (temps_ + 1e-12 >= prochain_temps_sortie_) {
-                double quantite_x = 0.0;
-                double quantite_y = 0.0;
+                double quantite_x{0.0};
+                double quantite_y{0.0};
                 quantiteMouvementTotale(quantite_x, quantite_y);
 
                 fichier_sortie_ << temps_;
@@ -185,8 +161,8 @@ private:
         }
 
         for (size_t i = 0; i < N_; ++i) {
-            double acceleration_x = 0.0;
-            double acceleration_y = 0.0;
+            double acceleration_x{0.0};
+            double acceleration_y{0.0};
 
             for (size_t j = 0; j < N_; ++j) {
                 if (i == j) {
@@ -251,7 +227,7 @@ private:
             const Etat etat_1_pas = rk4(etat_, h);
             const Etat etat_2_demi_pas = rk4(rk4(etat_, 0.5 * h), 0.5 * h);
 
-            double erreur = 0.0;
+            double erreur{0.0};
             for (size_t k = 0; k < etat_.size(); ++k) {
                 erreur = max(erreur, abs(etat_2_demi_pas[k] - etat_1_pas[k]) / max(1.0, abs(etat_2_demi_pas[k])));
             }
@@ -292,7 +268,7 @@ private:
 
     double energieTotale() const
     {
-        double energie = 0.0;
+        double energie{0.0};
 
         for (size_t i = 0; i < N_; ++i) {
             const double vitesse2 = etat_[ivx(i)] * etat_[ivx(i)] + etat_[ivy(i)] * etat_[ivy(i)];
