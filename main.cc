@@ -367,9 +367,9 @@ private:
         }
 
         *outputFile << " E Px Py";
-        *outputFile << " r_probe_earth altitude_probe";
-        *outputFile << " perigee dt_used";
-        *outputFile << " a_probe P_drag";
+        *outputFile << " r_sonde_terre altitude_sonde";
+        *outputFile << " perigee dt_utilise";
+        *outputFile << " a_sonde puissance_trainee";
         *outputFile << endl;
     }
 
@@ -380,11 +380,11 @@ private:
             double px = 0.0, py = 0.0;
             quantiteMouvementTotale(y_, px, py);
 
-            const double r_probe_earth = distanceSondeTerre(y_);
-            const double altitude_probe = altitudeSonde(y_);
+            const double r_sonde_terre = distanceSondeTerre(y_);
+            const double altitude_sonde = altitudeSonde(y_);
             const double perigee = distance_min_terre - rayons_[indice_terre];
-            const double a_probe = accelerationNormeSonde(y_);
-            const double P_drag = puissanceTraineeSonde(y_);
+            const double a_sonde = accelerationNormeSonde(y_);
+            const double puissance_trainee = puissanceTraineeSonde(y_);
 
             *outputFile << t;
             for (size_t i = 0; i < Nbody; ++i)
@@ -398,12 +398,12 @@ private:
             *outputFile << " " << energieTotale(y_)
                         << " " << px
                         << " " << py
-                        << " " << r_probe_earth
-                        << " " << altitude_probe
+                        << " " << r_sonde_terre
+                        << " " << altitude_sonde
                         << " " << perigee
                         << " " << dt_last_used
-                        << " " << a_probe
-                        << " " << P_drag
+                        << " " << a_sonde
+                        << " " << puissance_trainee
                         << endl;
 
             last = 1;

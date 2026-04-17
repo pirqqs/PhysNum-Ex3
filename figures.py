@@ -23,12 +23,12 @@ disposition_graphes = {
     "trajectories": True,
     "energy": True,
     "momentum": True,
-    "distance_probe_earth": True,
-    "altitude_probe": True,
+    "distance_sonde_terre": True,
+    "altitude_sonde": True,
     "perigee": True,
-    "dt_used": True,
-    "acceleration_probe": True,
-    "drag_power": True,
+    "dt_utilise": True,
+    "acceleration_sonde": True,
+    "puissance_trainee": True,
     "convergence_perigee": True,
     "convergence_altitude_min": True
 }
@@ -44,16 +44,16 @@ os.makedirs(dossier_figures, exist_ok=True)
 # FONCTIONS UTILES
 # ============================================================
 
-def get_probe_speed(data, colonnes, indice_sonde):
+def get_vitesse_sonde(data, colonnes, indice_sonde):
     vx = data[:, colonnes[f"vx{indice_sonde}"]]
     vy = data[:, colonnes[f"vy{indice_sonde}"]]
     return np.sqrt(vx**2 + vy**2)
 
 def get_hmin(data, colonnes):
-    return np.min(data[:, colonnes["altitude_probe"]])
+    return np.min(data[:, colonnes["altitude_sonde"]])
 
 def get_vmax(data, colonnes, indice_sonde):
-    v = get_probe_speed(data, colonnes, indice_sonde)
+    v = get_vitesse_sonde(data, colonnes, indice_sonde)
     return np.max(v)
 
 def get_nsteps(data, colonnes):
@@ -71,6 +71,7 @@ def lire_entete_et_donnees(chemin_fichier):
         raise RuntimeError(f"Aucune ligne d'entête commençant par '#' trouvée dans {chemin_fichier}")
 
     noms_colonnes = entete[1:].strip().split()
+    noms_colonnes = renommer_colonnes_compatibilite(noms_colonnes)
     dictionnaire_colonnes = {nom: i for i, nom in enumerate(noms_colonnes)}
 
     data = np.loadtxt(chemin_fichier, comments="#")
@@ -134,6 +135,17 @@ def get_axes(cle_graphe, titre, nombre_jeux_donnees):
 
 def tracer(ax, x, y, etiquette=None):
     ax.plot(x, y, label=etiquette)
+
+
+def renommer_colonnes_compatibilite(noms_colonnes):
+    correspondances = {
+        "r_probe_earth": "r_sonde_terre",
+        "altitude_probe": "altitude_sonde",
+        "dt_used": "dt_utilise",
+        "a_probe": "a_sonde",
+        "P_drag": "puissance_trainee",
+    }
+    return [correspondances.get(nom, nom) for nom in noms_colonnes]
 
 # ============================================================
 # LECTURE DES FICHIERS
@@ -348,15 +360,15 @@ if disposition_graphes["nsteps_vs_epsilon"] and nom_parametre == "epsilon":
 # GRAPHE : dt utilisé et distance en fonction du temps
 # ============================================================
 
-if disposition_graphes["dt_and_distance_vs_time"] and "dt_used" in col and "r_probe_earth" in col:
+if disposition_graphes["dt_and_distance_vs_time"] and "dt_utilise" in col and "r_sonde_terre" in col:
     fig, ax1 = plt.subplots()
 
     data = jeux_donnees[-1]
     t = data[:, col["t"]]
-    dt_used = data[:, col["dt_used"]]
-    r = data[:, col["r_probe_earth"]]
+    dt_utilise = data[:, col["dt_utilise"]]
+    r = data[:, col["r_sonde_terre"]]
 
-    ax1.plot(t, dt_used, label=r"$\Delta t$ utilisé")
+    ax1.plot(t, dt_utilise, label=r"$\Delta t$ utilisé")
     ax1.set_xlabel("t [s]")
     ax1.set_ylabel(r"$\Delta t$ utilisé [s]")
     ax1.grid()
@@ -466,22 +478,22 @@ if "Px" in col and "Py" in col:
 # GRAPHE : distance sonde-Terre
 # ============================================================
 
-if "r_probe_earth" in col:
-    fig, axes = get_axes("distance_probe_earth", "Distance sonde-Terre", len(jeux_donnees))
+if "r_sonde_terre" in col:
+    fig, axes = get_axes("distance_sonde_terre", "Distance sonde-Terre", len(jeux_donnees))
 
     for i, data in enumerate(jeux_donnees):
         t = data[:, col["t"]]
-        r = data[:, col["r_probe_earth"]]
+        r = data[:, col["r_sonde_terre"]]
 
         tracer(axes[i], t, r, etiquette=f"{nom_parametre}={valeurs_parametre[i]}")
         axes[i].set_xlabel("t [s]")
         axes[i].set_ylabel("distance sonde-Terre [m]")
         axes[i].grid()
 
-        if not disposition_graphes["distance_probe_earth"]:
+        if not disposition_graphes["distance_sonde_terre"]:
             axes[i].set_title(f"{nom_parametre} = {valeurs_parametre[i]}")
 
-    if disposition_graphes["distance_probe_earth"]:
+    if disposition_graphes["distance_sonde_terre"]:
         axes[0].legend()
 
     fig.savefig(os.path.join(dossier_figures, "distance_sonde_terre_all.png"), dpi=300)
@@ -490,22 +502,22 @@ if "r_probe_earth" in col:
 # GRAPHE : altitude de la sonde
 # ============================================================
 
-if "altitude_probe" in col:
-    fig, axes = get_axes("altitude_probe", "Altitude de la sonde", len(jeux_donnees))
+if "altitude_sonde" in col:
+    fig, axes = get_axes("altitude_sonde", "Altitude de la sonde", len(jeux_donnees))
 
     for i, data in enumerate(jeux_donnees):
         t = data[:, col["t"]]
-        altitude = data[:, col["altitude_probe"]]
+        altitude = data[:, col["altitude_sonde"]]
 
         tracer(axes[i], t, altitude, etiquette=f"{nom_parametre}={valeurs_parametre[i]}")
         axes[i].set_xlabel("t [s]")
         axes[i].set_ylabel("altitude [m]")
         axes[i].grid()
 
-        if not disposition_graphes["altitude_probe"]:
+        if not disposition_graphes["altitude_sonde"]:
             axes[i].set_title(f"{nom_parametre} = {valeurs_parametre[i]}")
 
-    if disposition_graphes["altitude_probe"]:
+    if disposition_graphes["altitude_sonde"]:
         axes[0].legend()
 
     fig.savefig(os.path.join(dossier_figures, "altitude_sonde_all.png"), dpi=300)
@@ -538,22 +550,22 @@ if "perigee" in col:
 # GRAPHE : pas de temps utilisé
 # ============================================================
 
-if "dt_used" in col:
-    fig, axes = get_axes("dt_used", "Pas de temps utilisé", len(jeux_donnees))
+if "dt_utilise" in col:
+    fig, axes = get_axes("dt_utilise", "Pas de temps utilisé", len(jeux_donnees))
 
     for i, data in enumerate(jeux_donnees):
         t = data[:, col["t"]]
-        dt_used = data[:, col["dt_used"]]
+        dt_utilise = data[:, col["dt_utilise"]]
 
-        tracer(axes[i], t, dt_used, etiquette=f"{nom_parametre}={valeurs_parametre[i]}")
+        tracer(axes[i], t, dt_utilise, etiquette=f"{nom_parametre}={valeurs_parametre[i]}")
         axes[i].set_xlabel("t [s]")
         axes[i].set_ylabel(r"$\Delta t$ utilisé [s]")
         axes[i].grid()
 
-        if not disposition_graphes["dt_used"]:
+        if not disposition_graphes["dt_utilise"]:
             axes[i].set_title(f"{nom_parametre} = {valeurs_parametre[i]}")
 
-    if disposition_graphes["dt_used"]:
+    if disposition_graphes["dt_utilise"]:
         axes[0].legend()
 
     fig.savefig(os.path.join(dossier_figures, "dt_utilise_all.png"), dpi=300)
@@ -562,22 +574,22 @@ if "dt_used" in col:
 # GRAPHE : accélération de la sonde
 # ============================================================
 
-if "a_probe" in col:
-    fig, axes = get_axes("acceleration_probe", "Accélération de la sonde", len(jeux_donnees))
+if "a_sonde" in col:
+    fig, axes = get_axes("acceleration_sonde", "Accélération de la sonde", len(jeux_donnees))
 
     for i, data in enumerate(jeux_donnees):
         t = data[:, col["t"]]
-        a = data[:, col["a_probe"]]
+        a = data[:, col["a_sonde"]]
 
         tracer(axes[i], t, a, etiquette=f"{nom_parametre}={valeurs_parametre[i]}")
         axes[i].set_xlabel("t [s]")
         axes[i].set_ylabel("accélération de la sonde [m/s²]")
         axes[i].grid()
 
-        if not disposition_graphes["acceleration_probe"]:
+        if not disposition_graphes["acceleration_sonde"]:
             axes[i].set_title(f"{nom_parametre} = {valeurs_parametre[i]}")
 
-    if disposition_graphes["acceleration_probe"]:
+    if disposition_graphes["acceleration_sonde"]:
         axes[0].legend()
 
     fig.savefig(os.path.join(dossier_figures, "acceleration_sonde_all.png"), dpi=300)
@@ -586,22 +598,22 @@ if "a_probe" in col:
 # GRAPHE : puissance de traînée
 # ============================================================
 
-if "P_drag" in col:
-    fig, axes = get_axes("drag_power", "Puissance de traînée", len(jeux_donnees))
+if "puissance_trainee" in col:
+    fig, axes = get_axes("puissance_trainee", "Puissance de traînée", len(jeux_donnees))
 
     for i, data in enumerate(jeux_donnees):
         t = data[:, col["t"]]
-        Pdrag = data[:, col["P_drag"]]
+        puissance_trainee = data[:, col["puissance_trainee"]]
 
-        tracer(axes[i], t, Pdrag, etiquette=f"{nom_parametre}={valeurs_parametre[i]}")
+        tracer(axes[i], t, puissance_trainee, etiquette=f"{nom_parametre}={valeurs_parametre[i]}")
         axes[i].set_xlabel("t [s]")
         axes[i].set_ylabel("puissance de traînée [W]")
         axes[i].grid()
 
-        if not disposition_graphes["drag_power"]:
+        if not disposition_graphes["puissance_trainee"]:
             axes[i].set_title(f"{nom_parametre} = {valeurs_parametre[i]}")
 
-    if disposition_graphes["drag_power"]:
+    if disposition_graphes["puissance_trainee"]:
         axes[0].legend()
 
     fig.savefig(os.path.join(dossier_figures, "puissance_trainee_all.png"), dpi=300)
@@ -630,10 +642,10 @@ if disposition_graphes["convergence_perigee"] and "perigee" in col:
 # GRAPHE : convergence de l'altitude minimale
 # ============================================================
 
-if disposition_graphes["convergence_altitude_min"] and "altitude_probe" in col:
+if disposition_graphes["convergence_altitude_min"] and "altitude_sonde" in col:
     fig, ax = plt.subplots()
 
-    altitudes_min = np.array([np.min(data[:, col["altitude_probe"]]) for data in jeux_donnees])
+    altitudes_min = np.array([np.min(data[:, col["altitude_sonde"]]) for data in jeux_donnees])
 
     ax.plot(valeurs_parametre, altitudes_min, marker="o")
     ax.set_xlabel(nom_parametre)
